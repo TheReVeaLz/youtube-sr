@@ -221,27 +221,33 @@ class Util {
         if (!data || !data.videoRenderer) return;
 
         const badge = data.videoRenderer.ownerBadges && data.videoRenderer.ownerBadges[0];
+        const vidRender = data.videoRenderer;
+        const vidThumbnail = vidRender.thumbnail.thumbnails;
+        const navigationEndpoint = vidRender.ownerText.runs[0].navigationEndpoint;
+        const browseEndpoint = navigationEndpoint.browseEndpoint
+            ?? navigationEndpoint.showDialogCommand?.panelLoadingStrategy?.inlineContent?.dialogViewModel?.customContent?.listViewModel?.listItems?.[0]?.listItemViewModel?.title?.commandRuns?.[0]?.onTap?.innertubeCommand?.browseEndpoint
+            ?? {}
         let res = new Video({
             id: data.videoRenderer.videoId,
             url: `https://www.youtube.com/watch?v=${data.videoRenderer.videoId}`,
-            title: data.videoRenderer.title.runs[0].text,
-            description: data.videoRenderer.descriptionSnippet && data.videoRenderer.descriptionSnippet.runs[0] ? data.videoRenderer.descriptionSnippet.runs[0].text : "",
-            duration: data.videoRenderer.lengthText ? Util.parseDuration(data.videoRenderer.lengthText.simpleText) : 0,
-            duration_raw: data.videoRenderer.lengthText ? data.videoRenderer.lengthText.simpleText : null,
+            title: vidRender.title.runs[0].text,
+            description: vidRender.descriptionSnippet && vidRender.descriptionSnippet.runs[0] ? vidRender.descriptionSnippet.runs[0].text : "",
+            duration: vidRender.lengthText ? Util.parseDuration(vidRender.lengthText.simpleText) : 0,
+            duration_raw: vidRender.lengthText ? vidRender.lengthText.simpleText : null,
             thumbnail: {
-                id: data.videoRenderer.videoId,
-                url: data.videoRenderer.thumbnail.thumbnails[data.videoRenderer.thumbnail.thumbnails.length - 1].url,
-                height: data.videoRenderer.thumbnail.thumbnails[data.videoRenderer.thumbnail.thumbnails.length - 1].height,
-                width: data.videoRenderer.thumbnail.thumbnails[data.videoRenderer.thumbnail.thumbnails.length - 1].width
+                id: vidRender.videoId,
+                url: vidThumbnail[vidThumbnail.length - 1].url,
+                height: vidThumbnail[vidThumbnail.length - 1].height,
+                width: vidThumbnail[vidThumbnail.length - 1].width
             },
             channel: {
-                id: data.videoRenderer.ownerText.runs[0].navigationEndpoint.browseEndpoint.browseId || null,
-                name: data.videoRenderer.ownerText.runs[0].text || null,
-                url: `https://www.youtube.com${data.videoRenderer.ownerText.runs[0].navigationEndpoint.browseEndpoint.canonicalBaseUrl || data.videoRenderer.ownerText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url}`,
+                id: browseEndpoint.browseId,
+                name: vidRender.ownerText.runs[0].text || null,
+                url: `https://www.youtube.com${browseEndpoint.canonicalBaseUrl || navigationEndpoint.commandMetadata.webCommandMetadata.url}`,
                 icon: {
-                    url: data.videoRenderer.channelThumbnail?.thumbnails?.[0]?.url || data.videoRenderer.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.thumbnail?.thumbnails?.[0]?.url,
-                    width: data.videoRenderer.channelThumbnail?.thumbnails?.[0]?.width || data.videoRenderer.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.thumbnail?.thumbnails?.[0]?.width,
-                    height: data.videoRenderer.channelThumbnail?.thumbnails?.[0]?.height || data.videoRenderer.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.thumbnail?.thumbnails?.[0]?.height
+                    url: vidRender.channelThumbnail?.thumbnails?.[0]?.url || vidRender.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.thumbnail?.thumbnails?.[0]?.url,
+                    width: vidRender.channelThumbnail?.thumbnails?.[0]?.width || vidRender.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.thumbnail?.thumbnails?.[0]?.width,
+                    height: vidRender.channelThumbnail?.thumbnails?.[0]?.height || vidRender.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.thumbnail?.thumbnails?.[0]?.height
                 },
                 verified: Boolean(badge?.metadataBadgeRenderer?.style?.toLowerCase().includes("verified"))
             },
