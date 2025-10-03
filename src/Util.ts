@@ -659,8 +659,7 @@ class Util {
     }
 
     static async makeRequest(url = "", data: any = { data: {}, requestOptions: {} }) {
-        const key = await Util.innertubeKey();
-        const res = await Util.getHTML(`https://youtube.com/youtubei/v1${url}?key=${key}`, {
+        const res = await Util.getHTML(`https://www.youtube.com/youtubei/v1${url}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
