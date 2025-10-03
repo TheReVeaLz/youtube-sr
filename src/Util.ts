@@ -180,28 +180,12 @@ class Util {
 
         // try to parse html
         try {
-            let data = html.split("ytInitialData = JSON.parse('")[1].split("');</script>")[0];
-            html = data.replace(/\\x([0-9A-F]{2})/gi, (...items) => {
-                return String.fromCharCode(parseInt(items[1], 16));
-            });
-        } catch {
-            /* do nothing */
-        }
-
-        try {
-            details = JSON.parse(html.split('{"itemSectionRenderer":{"contents":')[html.split('{"itemSectionRenderer":{"contents":').length - 1].split(',"continuations":[{')[0]);
+            const pattern = new RegExp("ytInitialData\\s*=\\s*(.*?)(?:;?)<\\/script>", "s");
+            const match = html.match(pattern);
+            details = JSON.parse(match[1]).contents.twoColumnSearchResultsRenderer.primaryContents.sectionListRenderer.contents[0].itemSectionRenderer.contents;
             fetched = true;
         } catch {
             /* do nothing */
-        }
-
-        if (!fetched) {
-            try {
-                details = JSON.parse(html.split('{"itemSectionRenderer":')[html.split('{"itemSectionRenderer":').length - 1].split('},{"continuationItemRenderer":{')[0]).contents;
-                fetched = true;
-            } catch {
-                /* do nothing */
-            }
         }
 
         if (!fetched) return [];
