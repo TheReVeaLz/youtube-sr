@@ -225,7 +225,8 @@ class Util {
         const vidThumbnail = vidRender.thumbnail.thumbnails;
         const navigationEndpoint = vidRender.ownerText.runs[0].navigationEndpoint;
         const browseEndpoint = navigationEndpoint.browseEndpoint
-            ?? navigationEndpoint.showDialogCommand?.panelLoadingStrategy?.inlineContent?.dialogViewModel?.customContent?.listViewModel?.listItems?.[0]?.listItemViewModel?.title?.commandRuns?.[0]?.onTap?.innertubeCommand?.browseEndpoint
+            ?? vidRender?.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.navigationEndpoint?.browseEndpoint
+            ?? navigationEndpoint?.showDialogCommand?.panelLoadingStrategy?.inlineContent?.dialogViewModel?.customContent?.listViewModel?.listItems?.[0]?.listItemViewModel?.title?.commandRuns?.[0]?.onTap?.innertubeCommand?.browseEndpoint
             ?? {}
         let res = new Video({
             id: data.videoRenderer.videoId,
@@ -243,7 +244,7 @@ class Util {
             channel: {
                 id: browseEndpoint.browseId,
                 name: vidRender.ownerText.runs[0].text || null,
-                url: `https://www.youtube.com${browseEndpoint.canonicalBaseUrl || navigationEndpoint.commandMetadata.webCommandMetadata.url}`,
+                url: `https://www.youtube.com${browseEndpoint?.canonicalBaseUrl || navigationEndpoint?.commandMetadata?.webCommandMetadata?.url}`,
                 icon: {
                     url: vidRender.channelThumbnail?.thumbnails?.[0]?.url || vidRender.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.thumbnail?.thumbnails?.[0]?.url,
                     width: vidRender.channelThumbnail?.thumbnails?.[0]?.width || vidRender.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.thumbnail?.thumbnails?.[0]?.width,
