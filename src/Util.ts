@@ -23,7 +23,8 @@
  */
 
 import { Formatter } from "./formatter";
-import { Channel, Video, Playlist, MusicInfo } from "./Structures/exports";
+import { SearchOptions } from "./mod";
+import { Channel, Video, Playlist, MusicInfo, Music } from "./Structures/exports";
 
 const PLAYLIST_REGEX = /^https?:\/\/(www.)?youtube.com\/playlist\?list=((PL|FL|UU|LL|RD|OL)[a-zA-Z0-9-_]{16,41})$/;
 const PLAYLIST_ID = /(PL|FL|UU|LL|RD|OL)[a-zA-Z0-9-_]{11,41}/;
@@ -37,7 +38,7 @@ const isNode = typeof process !== "undefined" && "node" in (process.versions || 
 const FETCH_LIBS = ["node-fetch", "cross-fetch", "undici"];
 
 export interface ParseSearchInterface {
-    type?: "video" | "playlist" | "channel" | "all" | "film";
+    type?: SearchOptions['type'];
     limit?: number;
     requestOptions?: RequestInit;
 }
@@ -208,6 +209,33 @@ class Util {
             url: url,
             verified: !badges?.length ? false : badges.some((badge) => badge["verifiedBadge"] || badge?.metadataBadgeRenderer?.style?.toLowerCase().includes("verified")),
             subscribers: data.channelRenderer.subscriberCountText.simpleText
+        });
+
+        return res;
+    }
+
+    static parseMusic(data?: any): Music {
+        if (!data || !data.playlistPanelVideoRenderer) return;
+
+        const vidRender = data.playlistPanelVideoRenderer;
+        const vidThumbnail = vidRender.thumbnail.thumbnails;
+        const longBylineText = vidRender.longBylineText.runs[0];
+        const browseEndpoint = longBylineText?.navigationEndpoint?.browseEndpoint;
+        let res = new Music({
+            id: vidRender.videoId,
+            title: vidRender.title.runs[0].text,
+            duration: vidRender.lengthText.runs[0].text ? Util.parseDuration(vidRender.lengthText.runs[0].text) : 0,
+            duration_raw: vidRender.lengthText.runs[0].text ? vidRender.lengthText.runs[0].text : null,
+            thumbnail: {
+                id: vidRender.videoId,
+                url: vidThumbnail[vidThumbnail.length - 1].url,
+                height: vidThumbnail[vidThumbnail.length - 1].height,
+                width: vidThumbnail[vidThumbnail.length - 1].width
+            },
+            channel: {
+                id: browseEndpoint?.browseId,
+                name: longBylineText.text || null
+            }
         });
 
         return res;

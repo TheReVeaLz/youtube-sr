@@ -23,14 +23,14 @@
  */
 
 import Util from "./Util";
-import { Channel, Video, Playlist } from "./Structures/exports";
+import { Channel, Video, Playlist, Music } from "./Structures/exports";
 import { Formatter } from "./formatter";
 
 const SAFE_SEARCH_COOKIE = "PREF=f2=8000000";
 
 export interface SearchOptions {
     limit?: number;
-    type?: "video" | "channel" | "playlist" | "all" | "film";
+    type?: "video" | "channel" | "playlist" | "all" | "film" | "music";
     requestOptions?: RequestInit;
     safeSearch?: boolean;
 }
@@ -54,6 +54,55 @@ export const TrendingFilter = {
 class YouTube {
     constructor() {
         return YouTube;
+    }
+
+
+    /**
+     * Search
+     * @param {string} videoId Video ID
+     * @param {object} options Search options
+     * @param {number} [options.limit=20] Limit
+     * @param {RequestInit} [options.requestOptions] Request options
+     */
+    static async searchNextMusic(videoId: string, options?: Exclude<SearchOptions, 'type'>): Promise<(Music)[]> {
+        if (!options) options = { limit: 100, type: "music", requestOptions: {} };
+        if (!videoId || typeof videoId !== "string") throw new Error(`Invalid video id "${videoId}"!`);
+
+        try {
+            const res = await Util.getHTML(`https://music.youtube.com/youtubei/v1/next?prettyPrint=false`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Origin: "https://music.youtube.com",
+                    Referer: `https://music.youtube.com/watch?v=${videoId}`
+                },
+                body: JSON.stringify({
+                    context: {
+                        client: {
+                            utcOffsetMinutes: new Date().getTimezoneOffset(),
+                            gl: "US",
+                            hl: "en",
+                            clientName: "WEB_REMIX",
+                            clientVersion: "1.20260112.03.01"
+                        }
+                    },
+                    watchEndpointMusicSupportedConfigs: {
+                        watchEndpointMusicConfig: {
+                            musicVideoType: "MUSIC_VIDEO_TYPE_OMV"
+                        }
+                    },
+                    videoId,
+                    playlistId: `RDAMVM${videoId}`,
+                    params: "wAEB",
+                    index: 0
+                })
+            });
+
+            const resJson = Util.json(res).contents.singleColumnMusicWatchNextResultsRenderer.tabbedRenderer.watchNextTabbedResultsRenderer.tabs[0].tabRenderer.content.musicQueueRenderer.content.playlistPanelRenderer.contents;
+            return Formatter.formatSearchResultMusic(resJson, options);
+        } catch (err: any) {
+            console.error(err.message);
+        }
     }
 
     /**

@@ -26,3 +26,4 @@ export * from "./Channel";
 export * from "./Playlist";
 export * from "./Video";
 export * from "./Thumbnail";
+export * from "./Music";

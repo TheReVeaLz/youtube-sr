@@ -22,7 +22,8 @@
  * SOFTWARE.
  */
 
-import { Playlist, Video, Channel } from "./Structures/exports";
+import { SearchOptions } from "./mod";
+import { Playlist, Video, Channel, Music } from "./Structures/exports";
 import Util from "./Util";
 
 export class Formatter {
@@ -30,18 +31,36 @@ export class Formatter {
         return Formatter;
     }
 
+    public static formatSearchResultMusic(
+        details: any[],
+        options: { limit?: number; type?: SearchOptions['type'] } = {
+            limit: 100
+        }
+    ) {
+        const results: Array<Music> = [];
+
+        for (let data of details) {
+            if (typeof options.limit === "number" && options.limit > 0 && results.length >= options.limit) break;
+            const res = Util.parseMusic(data);
+
+            if (res)
+                results.push(res);
+        }
+
+        return results;
+    }
+
     public static formatSearchResult(
         details: any[],
-        options: { limit?: number; type?: "film" | "video" | "channel" | "playlist" | "all" } = {
+        options: { limit?: number; type?: SearchOptions['type'] } = {
             limit: 100,
             type: "all"
         }
     ) {
         const results: Array<Video | Channel | Playlist> = [];
 
-        for (let i = 0; i < details.length; i++) {
+        for (let data of details) {
             if (typeof options.limit === "number" && options.limit > 0 && results.length >= options.limit) break;
-            let data = details[i];
             let res: Video | Channel | Playlist;
             if (options.type === "all") {
                 if (!!data.videoRenderer) options.type = "video";
@@ -50,21 +69,21 @@ export class Formatter {
                 else continue;
             }
 
-            if (options.type === "video" || options.type === "film") {
-                const parsed = Util.parseVideo(data);
-                if (!parsed) continue;
-                res = parsed;
-            } else if (options.type === "channel") {
-                const parsed = Util.parseChannel(data);
-                if (!parsed) continue;
-                res = parsed;
-            } else if (options.type === "playlist") {
-                const parsed = Util.parsePlaylist(data);
-                if (!parsed) continue;
-                res = parsed;
+            switch (options.type) {
+                case "video":
+                case "film":
+                    res = Util.parseVideo(data);
+                    break;
+                case "channel":
+                    res = Util.parseChannel(data);
+                    break;
+                case "playlist":
+                    res = Util.parsePlaylist(data);
+                    break;
             }
 
-            results.push(res);
+            if (res)
+                results.push(res);
         }
 
         return results;
